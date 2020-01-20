@@ -1,26 +1,21 @@
 (require 'package)
-
 (setq package-archives
       '(("gnu" ."https://elpa.gnu.org/packages/")
 	("melpa" . "https://melpa.org/packages/")))
-
 (package-initialize)
 
-(global-set-key [remap list-buffers] 'ibuffer)
-
 (fset 'yes-or-no-p 'y-or-n-p)
+
+(global-set-key [(f3)] 'eshell)
+(global-set-key [remap list-buffers] 'ibuffer)
 
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
 
-(use-package which-key
-  :ensure t
-  :config (which-key-mode))
-
 (use-package ace-window
   :ensure t
-  :config (global-set-key [remap other-window] 'ace-window))
+  :config (global-set-key (kbd "M-o") 'ace-window))
 
 (use-package ivy
   :ensure t
@@ -39,13 +34,19 @@
   :ensure t
   :bind ("M-g w" . avy-goto-word-1))
 
+(use-package treemacs
+  :ensure t
+  :config
+  (progn
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t))
+  :bind
+  (:map global-map
+	([f8] . treemacs)))
+
 (use-package undo-tree
   :ensure t
   :config (global-undo-tree-mode))
-
-(use-package hungry-delete
-  :ensure t
-  :config (global-hungry-delete-mode))
 
 (use-package expand-region
   :ensure t
@@ -63,64 +64,61 @@
   :config
   (progn
     (global-company-mode)
-    (setq company-backends (delete 'company-semantic company-backends))))
+    (setq company-backends (delete 'company-semantic company-backends))
+    (define-key company-active-map (kbd "M-n") nil)
+    (define-key company-active-map (kbd "M-p") nil)
+    (define-key company-active-map (kbd "C-n") 'company-select-next)
+    (define-key company-active-map (kbd "C-p") 'company-select-previous)))
 
-;; Add system headers path:
-;;   (add-to-list 'company-c-headers-path-system "/usr/include/c++/9/")
-;; Add local headers path:
-;;   (add-to-list 'company-c-headers-path-user /home/<user>/project_root/include)
-(use-package company-c-headers
+(use-package lsp-mode
   :ensure t
-  :config (add-to-list 'company-backends 'company-c-headers))
-
-;; Create a symbol links to external libraries
-;;   ln -s /usr/include usr-include
-;; Generate GNU Global database in compact format
-;;   gtags -c
-(use-package ggtags
-  :ensure t
+  :hook
+  (c++-mode . lsp)
+  (python-mode . lsp)
+  :commands lsp
   :config
-  (progn
-    (add-hook 'c-mode-common-hook
-	      (lambda ()
-		(when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
-		  (ggtags-mode 1))))
-    (define-key ggtags-mode-map (kbd "C-c g s") 'ggtags-find-other-symbol)
-    (define-key ggtags-mode-map (kbd "C-c g h") 'ggtags-view-tag-history)
-    (define-key ggtags-mode-map (kbd "C-c g r") 'ggtags-find-reference)
-    (define-key ggtags-mode-map (kbd "C-c g f") 'ggtags-find-file)
-    (define-key ggtags-mode-map (kbd "C-c g c") 'ggtags-create-tags)
-    (define-key ggtags-mode-map (kbd "C-c g u") 'ggtags-update-tags)
-    (define-key ggtags-mode-map (kbd "M-,") 'pop-tag-mark)))
+  (linum-mode t))
 
-(use-package sr-speedbar
-  :ensure t)
-
-(use-package yasnippet
+(use-package lsp-ui
   :ensure t
-  :config (yas-global-mode t))
+  :commands lsp-ui-mode)
 
-(use-package yasnippet-snippets
-  :ensure t)
-
-(use-package smartparens
+(use-package company-lsp
   :ensure t
-  :config
-  (progn
-    (show-smartparens-global-mode t)
-    (smartparens-global-mode t)))
+  :commands company-lsp
+  :config (push 'company-lsp company-backends))
+
+(use-package lsp-treemacs
+  :ensure t
+  :commands lsp-treemacs-error-list)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(auto-save-default nil)
+ '(avy-background t)
+ '(before-save-hook (quote (delete-trailing-whitespace lsp-format-buffer)))
+ '(column-number-mode t)
+ '(company-idle-delay 0)
+ '(company-lsp-enable-snippet nil)
+ '(electric-indent-mode t)
+ '(electric-pair-mode t)
+ '(flycheck-disabled-checkers (quote (emacs-lisp-checkdoc javascript-jshint)))
+ '(indent-tabs-mode nil)
  '(inhibit-startup-screen t)
+ '(lsp-enable-snippet nil)
+ '(lsp-prefer-flymake :none)
+ '(make-backup-files nil)
+ '(menu-bar-mode nil)
  '(package-check-signature nil)
  '(package-enable-at-startup nil)
  '(package-selected-packages
    (quote
-    (smartparens company-c-headers yasnippet-snippets yasnippet sr-speedbar ggtags company flycheck undo-tree which-key use-package hungry-delete expand-region counsel ace-window)))
+    (lsp-treemacs company-lsp lsp-ui lsp-mode company flycheck expand-region undo-tree treemacs counsel ivy ace-window use-package)))
+ '(show-paren-mode t)
+ '(show-trailing-whitespace t)
  '(tool-bar-mode nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
