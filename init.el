@@ -6,8 +6,15 @@
 
 (fset 'yes-or-no-p 'y-or-n-p)
 
-(global-set-key [(f3)] 'eshell)
 (global-set-key [remap list-buffers] 'ibuffer)
+
+(define-auto-insert "\\.cpp" "my-oj-template.cpp")
+(add-hook 'c++-mode-hook 'linum-mode)
+(defun c++-compile-and-run ()
+  (interactive)
+  (compile (format "g++ -Wall %s -o main.out && ./main.out < exam.txt" (buffer-file-name))))
+(require 'cc-mode)
+(define-key c++-mode-map (kbd "<f5>") 'c++-compile-and-run)
 
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
@@ -34,16 +41,6 @@
   :ensure t
   :bind ("M-g w" . avy-goto-word-1))
 
-(use-package treemacs
-  :ensure t
-  :config
-  (progn
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t))
-  :bind
-  (:map global-map
-	([f8] . treemacs)))
-
 (use-package undo-tree
   :ensure t
   :config (global-undo-tree-mode))
@@ -64,7 +61,7 @@
   :config
   (progn
     (global-company-mode)
-    (setq company-backends (delete 'company-semantic company-backends))
+;    (setq company-backends (delete 'company-semantic company-backends))
     (define-key company-active-map (kbd "M-n") nil)
     (define-key company-active-map (kbd "M-p") nil)
     (define-key company-active-map (kbd "C-n") 'company-select-next)
@@ -75,9 +72,7 @@
   :hook
   (c++-mode . lsp)
   (python-mode . lsp)
-  :commands lsp
-  :config
-  (linum-mode t))
+  :commands lsp)
 
 (use-package lsp-ui
   :ensure t
@@ -97,8 +92,8 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(auto-insert-directory "~/Templates/")
  '(auto-save-default nil)
- '(avy-background t)
  '(before-save-hook (quote (delete-trailing-whitespace lsp-format-buffer)))
  '(column-number-mode t)
  '(company-idle-delay 0)
@@ -116,9 +111,8 @@
  '(package-enable-at-startup nil)
  '(package-selected-packages
    (quote
-    (lsp-treemacs company-lsp lsp-ui lsp-mode company flycheck expand-region undo-tree treemacs counsel ivy ace-window use-package)))
+    (lsp-treemacs company-lsp lsp-ui lsp-mode company flycheck expand-region undo-tree counsel ivy ace-window use-package)))
  '(show-paren-mode t)
- '(show-trailing-whitespace t)
  '(tool-bar-mode nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -126,3 +120,4 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+(put 'scroll-left 'disabled nil)
