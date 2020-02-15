@@ -5,8 +5,12 @@
 (package-initialize)
 
 (fset 'yes-or-no-p 'y-or-n-p)
-
 (global-set-key [remap list-buffers] 'ibuffer)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (when (display-graphic-p)
+              (eshell)
+              (cd default-directory))))
 
 (define-auto-insert "\\.cpp" "my-oj-template.cpp")
 (add-hook 'c++-mode-hook 'linum-mode)
@@ -20,13 +24,27 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode t)
+  (setq which-key-idle-delay 0.5))
+
+(use-package material-theme
+  :ensure t
+  :config (load-theme 'material t))
+
 (use-package ace-window
   :ensure t
-  :config (global-set-key (kbd "M-o") 'ace-window))
+  :config (define-key global-map (kbd "M-o") 'ace-window))
 
 (use-package ivy
   :ensure t
-  :config (ivy-mode t))
+  :config
+  (ivy-mode t)
+  (setq ivy-re-builders-alist
+        '((swiper . ivy--regex-plus)
+          (t . ivy--regex-fuzzy))))
 
 (use-package counsel
   :ensure t
@@ -34,12 +52,11 @@
 
 (use-package swiper
   :ensure t
-  :bind (("C-s" . swiper)
-	 ("C-c C-r" . ivy-resume)))
+  :config (define-key global-map (kbd "C-s") 'swiper))
 
 (use-package avy
   :ensure t
-  :bind ("M-g w" . avy-goto-word-1))
+  :config (define-key global-map (kbd "M-g w") 'avy-goto-word-1))
 
 (use-package undo-tree
   :ensure t
@@ -47,32 +64,31 @@
 
 (use-package expand-region
   :ensure t
-  :config (global-set-key (kbd "C-=") 'er/expand-region))
+  :config (define-key global-map (kbd "C-=") 'er/expand-region))
 
 (use-package flycheck
   :ensure t
   :config (global-flycheck-mode))
 
-;; Create a file named .dir-locals.el at project root
-;; ((nil . ((company-clang-arguments . ("-I/home/<user>/project_root/include1/"
-;;                                     "-I/home/<user>/project_root/include2/")))))
 (use-package company
   :ensure t
   :config
-  (progn
-    (global-company-mode)
-;    (setq company-backends (delete 'company-semantic company-backends))
-    (define-key company-active-map (kbd "M-n") nil)
-    (define-key company-active-map (kbd "M-p") nil)
-    (define-key company-active-map (kbd "C-n") 'company-select-next)
-    (define-key company-active-map (kbd "C-p") 'company-select-previous)))
+  (global-company-mode)
+  (define-key company-active-map (kbd "M-n") nil)
+  (define-key company-active-map (kbd "M-p") nil)
+  (define-key company-active-map (kbd "C-n") 'company-select-next)
+  (define-key company-active-map (kbd "C-p") 'company-select-previous)
+  (setq company-idle-delay 0.2))
 
 (use-package lsp-mode
   :ensure t
-  :hook
-  (c++-mode . lsp)
-  (python-mode . lsp)
-  :commands lsp)
+  :init
+  (add-hook 'c++-mode-hook 'lsp)
+  (add-hook 'python-mode 'lsp)
+  (setq lsp-diagnostic-package :flycheck)
+  :commands lsp
+  :config
+  (setq lsp-keymap-prefix "C-c l"))
 
 (use-package lsp-ui
   :ensure t
@@ -81,11 +97,42 @@
 (use-package company-lsp
   :ensure t
   :commands company-lsp
-  :config (push 'company-lsp company-backends))
+  :config
+  (push 'company-lsp company-backends))
+
+(use-package treemacs
+  :ensure t
+  :config (define-key global-map (kbd"M-0") 'treemacs-select-window))
 
 (use-package lsp-treemacs
   :ensure t
-  :commands lsp-treemacs-error-list)
+  :commands lsp
+  :config
+  (lsp-treemacs-sync-mode t))
+
+(use-package projectile
+  :ensure t
+  :config
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (projectile-mode t))
+
+(use-package treemacs-projectile
+  :after treemacs projectile
+  :ensure t)
+
+(use-package hl-todo
+  :ensure t
+  :config
+  (global-hl-todo-mode t)
+  (define-key hl-todo-mode-map (kbd "C-c o") 'hl-todo-occur)
+  (define-key hl-todo-mode-map (kbd "C-c i") 'hl-todo-insert))
+
+(use-package yasnippet
+  :ensure t
+  :config (yas-global-mode t))
+
+(use-package flx
+  :ensure t)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -96,24 +143,23 @@
  '(auto-save-default nil)
  '(before-save-hook (quote (delete-trailing-whitespace lsp-format-buffer)))
  '(column-number-mode t)
- '(company-idle-delay 0)
- '(company-lsp-enable-snippet nil)
+ '(delete-selection-mode t)
  '(electric-indent-mode t)
  '(electric-pair-mode t)
  '(flycheck-disabled-checkers (quote (emacs-lisp-checkdoc javascript-jshint)))
  '(indent-tabs-mode nil)
  '(inhibit-startup-screen t)
- '(lsp-enable-snippet nil)
- '(lsp-prefer-flymake :none)
  '(make-backup-files nil)
  '(menu-bar-mode nil)
  '(package-check-signature nil)
  '(package-enable-at-startup nil)
  '(package-selected-packages
    (quote
-    (lsp-treemacs company-lsp lsp-ui lsp-mode company flycheck expand-region undo-tree counsel ivy ace-window use-package)))
+    (flx yasnippet which-key treemacs-projectile material-theme hl-todo projectile lsp-treemacs company-lsp lsp-ui lsp-mode company flycheck expand-region undo-tree counsel ivy ace-window use-package)))
  '(show-paren-mode t)
- '(tool-bar-mode nil))
+ '(tool-bar-mode nil)
+ '(treemacs-filewatch-mode t)
+ '(treemacs-follow-mode t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
