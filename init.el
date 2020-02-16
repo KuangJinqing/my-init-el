@@ -6,19 +6,8 @@
 
 (fset 'yes-or-no-p 'y-or-n-p)
 (global-set-key [remap list-buffers] 'ibuffer)
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (when (display-graphic-p)
-              (eshell)
-              (cd default-directory))))
-
-(define-auto-insert "\\.cpp" "my-oj-template.cpp")
+(add-hook 'c-mode-hook 'linum-mode)
 (add-hook 'c++-mode-hook 'linum-mode)
-(defun c++-compile-and-run ()
-  (interactive)
-  (compile (format "g++ -Wall %s -o main.out && ./main.out < exam.txt" (buffer-file-name))))
-(require 'cc-mode)
-(define-key c++-mode-map (kbd "<f5>") 'c++-compile-and-run)
 
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
@@ -27,8 +16,7 @@
 (use-package which-key
   :ensure t
   :config
-  (which-key-mode t)
-  (setq which-key-idle-delay 0.5))
+  (which-key-mode t))
 
 (use-package material-theme
   :ensure t
@@ -77,18 +65,16 @@
   (define-key company-active-map (kbd "M-n") nil)
   (define-key company-active-map (kbd "M-p") nil)
   (define-key company-active-map (kbd "C-n") 'company-select-next)
-  (define-key company-active-map (kbd "C-p") 'company-select-previous)
-  (setq company-idle-delay 0.2))
+  (define-key company-active-map (kbd "C-p") 'company-select-previous))
 
 (use-package lsp-mode
   :ensure t
   :init
+  (add-hook 'c-mode-hook 'lsp)
   (add-hook 'c++-mode-hook 'lsp)
   (add-hook 'python-mode 'lsp)
-  (setq lsp-diagnostic-package :flycheck)
   :commands lsp
-  :config
-  (setq lsp-keymap-prefix "C-c l"))
+  :config )
 
 (use-package lsp-ui
   :ensure t
@@ -113,8 +99,15 @@
 (use-package projectile
   :ensure t
   :config
+  (add-to-list 'projectile-project-root-files "compile-and-run.el")
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "<f5>") (lambda () (interactive)(load-file (concat projectile-project-root "compile-and-run.el"))))
   (projectile-mode t))
+
+(use-package counsel-projectile
+  :after counsel projectile
+  :ensure t
+  :config (counsel-projectile-mode t))
 
 (use-package treemacs-projectile
   :after treemacs projectile
@@ -134,6 +127,12 @@
 (use-package flx
   :ensure t)
 
+(use-package exec-path-from-shell
+  :ensure t
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -143,23 +142,28 @@
  '(auto-save-default nil)
  '(before-save-hook (quote (delete-trailing-whitespace lsp-format-buffer)))
  '(column-number-mode t)
+ '(company-idle-delay 0.1)
  '(delete-selection-mode t)
  '(electric-indent-mode t)
  '(electric-pair-mode t)
  '(flycheck-disabled-checkers (quote (emacs-lisp-checkdoc javascript-jshint)))
  '(indent-tabs-mode nil)
  '(inhibit-startup-screen t)
+ '(lsp-clients-clangd-args (quote ("-header-insertion=never")))
+ '(lsp-diagnostic-package :flycheck)
+ '(lsp-keymap-prefix "C-c l")
  '(make-backup-files nil)
  '(menu-bar-mode nil)
  '(package-check-signature nil)
  '(package-enable-at-startup nil)
  '(package-selected-packages
    (quote
-    (flx yasnippet which-key treemacs-projectile material-theme hl-todo projectile lsp-treemacs company-lsp lsp-ui lsp-mode company flycheck expand-region undo-tree counsel ivy ace-window use-package)))
+    (counsel-projectile exec-path-from-shell flx yasnippet which-key treemacs-projectile material-theme hl-todo projectile lsp-treemacs company-lsp lsp-ui lsp-mode company flycheck expand-region undo-tree counsel ivy ace-window use-package)))
  '(show-paren-mode t)
  '(tool-bar-mode nil)
  '(treemacs-filewatch-mode t)
- '(treemacs-follow-mode t))
+ '(treemacs-follow-mode t)
+ '(which-key-idle-delay 0.5))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

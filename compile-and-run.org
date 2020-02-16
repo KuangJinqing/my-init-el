@@ -1,0 +1,22 @@
+#+startup: indent hidestars
+* A Collection of compile-and-run.el
+These are compile-and-run.el scripts that I often use.
+** Oj
+#+BEGIN_SRC lisp
+(compile (format "g++ -Wall %s -o main.out && ./main.out < exam.txt" (buffer-file-name)))
+#+END_SRC
+** Qt Project
+#+BEGIN_SRC lisp
+(require 'projectile)
+(defun run-project-sync-with-compile (process signal)
+  (when (memq (process-status process) '(exit signal))
+    (call-process-shell-command (format "%sbuild/%s &" (projectile-project-root) (projectile-project-name)) nil 0)
+    (shell-command-sentinel process signal)))
+(let* ((proc (progn
+               (projectile-run-compilation (format "mkdir -p build && cd build && qmake ../%s.pro -spec linux-g++ && make -j6" (projectile-project-name)))
+               (get-buffer-process (get-buffer "*compilation*")))))
+  (if (process-live-p proc)
+      (set-process-sentinel proc 'run-project-sync-with-compile)
+    (message "No process running.")))
+
+#+END_SRC
