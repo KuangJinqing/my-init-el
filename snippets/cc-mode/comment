@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: Comment
-# key: \co
-# --
-//! ${1: description}

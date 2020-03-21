@@ -1,9 +1,0 @@
-# -*- mode: snippet -*-
-# name: Brief Description
-# key: \brief
-# group: doxygen
-# --
-/**
- *  @brief ${1: brief description}
- *  ${2:Detailed description}
- */
